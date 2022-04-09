@@ -1,0 +1,141 @@
+---
+title: "data-analysis-replication"
+author: "Jyhreh Johnson"
+date: "3/8/2022"
+output: 
+  html_document: 
+    highlight: zenburn
+    theme: readable
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+	warning = TRUE,
+	message = TRUE,
+	comment = "##",
+	prompt = FALSE,
+	tidy = TRUE,
+	tidy.opts = list(blank = FALSE, width.cutoff = 75),
+	fig.path = "images/",
+	fig.align = "center"
+) #tells {knitr} where to output figures/where to find images of figures
+```
+**Introduction**
+Martinez 2017 sought out to...
+
+**Methods**
+
+**Results**
+
+**Discussion**
+
+Preliminaries | Load in necessary packages
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggfortify)
+library(MASS)
+library(caret)
+library(AppliedPredictiveModeling)
+library(lars)
+library(pls)
+```
+
+1. Load in Data
+```{r}
+#Figure data
+bs_f <- "https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/body%20shape%20coordinates.csv"
+d1 <- read.csv(bs_f, header = TRUE, stringsAsFactors = FALSE)
+head(d1)
+
+#Figure data
+fbs_f <- "https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/fourbar%20shape%20coordinates.csv"
+d2 <- read.csv(fbs_f, header = TRUE, stringsAsFactors = FALSE)
+head(d2)
+
+#Figure data
+mkt_f <- "https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/hypothetical%204bars%2C%20MKT.csv"
+d3 <- read.csv(mkt_f, header = TRUE, stringsAsFactors = FALSE)
+head(d3)
+
+#Figure data
+species_f <-"https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/species%20info.csv"
+d4 <- read.csv(species_f, header = TRUE, stringsAsFactors = FALSE)
+head(d4)
+```
+
+
+2. Figure 4 Reduplication | PCA of Body Phylomorphospace
+```{r}
+#Calculate the Principal Components
+d1_mod <- str_split_fixed(d1$species, "_", 2) #split the original species column into two (Genus name & Species name)
+d1_mod <- as.data.frame(d1_mod, row.names = NULL, optional = FALSE) #make the modified data set a data frame
+bs_data <- d1 %>% mutate(genus = d1_mod$V1) #add the column genus 
+bs_data <- bs_data[2:118]
+bs_pca <- prcomp(bs_data, scale = TRUE) 
+autoplot(bs_pca, data = bs_data, colour = 'genus') #plot the pca coloring the data by genus 
+
+#bs_data_reverse <- -1*bs_data_reverse
+```
+```{r echo=FALSE, out.width="70%"}
+knitr::include_graphics("images/pc_of_bodyphylomorphospace.png")
+```
+Helpful Links: 
+https://cran.r-project.org/web/packages/ggfortify/vignettes/plot_pca.html
+https://www.statology.org/principal-components-analysis-in-r/
+http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/
+
+3. Figure 5 Reduplication | PCA of Oral Jaw Phylomorphospace
+```{r}
+```
+```{r echo=FALSE, out.width="70%"}
+#knitr::include_graphics("images/pc_of_oraljaw.png")
+```
+
+
+4. Figure 6 Reduplication | Comparison MKT Density Plot
+```{r}
+#Actually works! I really did that OMG. Looks somewhat like the original figure, I can't figure out how to fix the dip in the graph however.
+mkt_plot <- ggplot(d4, aes(x = MKT)) +
+       geom_density(aes(group = subfamily, fill = subfamily), alpha = 0.5) + 
+       xlim(c(min(d4$MKT), c(max(d4$MKT)))) +
+       scale_fill_discrete(name = NULL , labels = c("Etroplinae", "Ptychochrominae"))
+
+mkt_plot
+```
+```{r echo=FALSE, out.width="70%"}
+knitr::include_graphics("images/comparison_of_MKT.png")
+```
+
+
+5. Figure 7 Reduplication | Axis of Covariation
+```{r}
+head(d4)
+#two-block partial least square
+
+#set.seed(1)
+#shape1 <-plsr(jaw_centroid_size ~ body_centroid_size, data=d4, scale=TRUE, validation = "CV")
+
+#summary(shape1)
+
+#validationplot(shape1)
+#validationplot(shape1, val.type="MSEP")
+#validationplot(shape1, val.type="R2")
+
+#shape_train <- d4[1:13, c("jaw_centroid_size", "body_centroid_size")]
+#shape_test <- d4[26:nrow(d4), c("jaw_centroid_size")]
+#test <- d4[26:nrow(d4), c("body_centroid_size")]
+
+#shape1 <- plsr(jaw_centroid_size ~ body_centroid_size, data=shape_train, scale=TRUE, validation="CV")
+
+#plot(RMSEP(shape1), main=NULL)
+#plot(shape1, ncomp = 1, asp = 1, line = TRUE, xlab="PLS 1, jaw shape", ylab="PLS 1, body shape", main=d4$subfamily[c(1,14)], color=d4$subfamily)
+
+#two.b.pls(d4$jaw_centroid_size, d4$body_centroid_size, iter = 26, seed = NULL, print.progress = TRUE)
+```
+Links Used:
+chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2Fpls%2Fvignettes%2Fpls-manual.pdf&clen=468096&chunk=truechrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2Fpls%2Fvignettes%2Fpls-manual.pdf&clen=468096&chunk=true
+https://www.statology.org/partial-least-squares-in-r/
+http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/152-principal-component-and-partial-least-squares-regression-essentials/
+```{r echo=FALSE, out.width="70%"}
+#knitr::include_graphics("images/axis_of_covariaton.png")
+```
