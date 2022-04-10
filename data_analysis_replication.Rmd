@@ -42,8 +42,7 @@ require(pls)
 require(stats)
 require(FactoMineR)
 require(factoextra)
-require(reshape2)
-require(cowplot)
+require(geomorph)
 ```
 
 ## Visualization of Data
@@ -89,15 +88,6 @@ head(d4,3)
 
 [Be sure to **thoroughly** explain what replications you are doing and comment your code so that it is easy for a reader to understand. Include in this section relevant tables/figures/values from the original paper for comparison to what you accomplished with your replication. Note that I want you to do the bulk of any *exposition* using text and markdown syntax outside of code blocks. That is, your document should not just be one big code block with ***R*** style comments but rather a nicely formatted report with code separated from exposition, interpretation, and discussion.]
 
-## Summary/Discussion
-
-[Narrative section that overviews how successful were you at replicating the analyses and visualizations in the study. What problems did you encounter? Why might you have encountered those problems? What details were lacking from the original study's methods that might have hampered your ability to replicate the authors' results?]
-
-## References
-Christopher M. Martinez, John S. Sparks. 2017. Malagasy cichlids differentially limit impacts of body shape evolution on oral jaw functional morphology. Evolution. Volume 71, Issue 9 p. 2219-2229. https://onlinelibrary.wiley.com/doi/10.1111/evo.13298
-
-Dryad Data Download: https://datadryad.org/stash/dataset/doi:10.5061/dryad.k3b10
-
 ## 2. Figure 4 Reduplication | PCA of Body Phylomorphospace
 
 Data Preparation
@@ -116,25 +106,25 @@ PCA Analysis
 bs_data_scaled <- scale(bs_data[, -1], 
                      center = TRUE, 
                      scale = TRUE)
-head(bs_data_scaled,3)
+#head(bs_data_scaled,3)
 
-e = eigen(cov(bs_data[, -1]))
-head(e,3)
+e1 <- eigen(cov(bs_data[, -1]))
+#head(e1,3)
 
-e.scaled = eigen(cov(bs_data_scaled))
-head(e.scaled,3)
+e1.scaled <- eigen(cov(bs_data_scaled))
+#head(e1.scaled,3)
 
-e.scaled$values #Variances
-e.scaled$values/6 #proportion of variances
-cumsum(e.scaled$values/6) #Cumulative proportion
+e1.scaled$values #Variances
+e1.scaled$values/6 #proportion of variances
+cumsum(e1.scaled$values/6) #Cumulative proportion
 
-bs_data_pc  = as.matrix(bs_data_scaled) %*% e.scaled$vectors 
-head(bs_data_pc,3)
+bs_data_pc <- as.matrix(bs_data_scaled) %*% e1.scaled$vectors 
+#head(bs_data_pc,3)
 
 bs_pca <- prcomp(bs_data[, -1],
              center = TRUE,
              scale. = TRUE)
-head(bs_pca$x,3)
+#head(bs_pca$x,3)
 
 summary(bs_pca)
 
@@ -163,25 +153,25 @@ PCA Analysis
 oj_data_scaled <- scale(oj_data[, -1], 
                      center = TRUE, 
                      scale = TRUE)
-head(oj_data_scaled,3)
+#head(oj_data_scaled,3)
 
-e2 = eigen(cov(oj_data[, -1]))
-head(e2,3)
+e2 <- eigen(cov(oj_data[, -1]))
+#head(e2,3)
 
-e2.scaled = eigen(cov(oj_data_scaled))
-head(e2.scaled,3)
+e2.scaled <- eigen(cov(oj_data_scaled))
+#head(e2.scaled,3)
 
 e2.scaled$values #Variances
 e2.scaled$values/6 #proportion of variances
 cumsum(e2.scaled$values/6) #Cumulative proportion
 
-oj_data_pc  = as.matrix(oj_data_scaled) %*% e2.scaled$vectors 
-head(oj_data_pc,3)
+oj_data_pc <- as.matrix(oj_data_scaled) %*% e2.scaled$vectors 
+#head(oj_data_pc,3)
 
 oj_pca <- prcomp(oj_data[, -1],
              center = TRUE,
              scale. = TRUE)
-head(oj_pca$x,3)
+#head(oj_pca$x,3)
 
 summary(oj_pca)
 
@@ -229,12 +219,22 @@ shape1 <- plsr(jaw_centroid_size ~ body_centroid_size, data=shape_train, scale=T
 plot(RMSEP(shape1), main=NULL)
 plot(shape1, ncomp = 1, asp = 1, line = TRUE, xlab="PLS 1, jaw shape", ylab="PLS 1, body shape", main=d4$subfamily[c(1,14)], color=d4$subfamily)
 
-two.b.pls(d4$jaw_centroid_size, d4$body_centroid_size, iter = 26, seed = NULL, print.progress = TRUE)
+
+#2B-PLS between head shape and food use data
+PLS <-two.b.pls(d4$jaw_centroid_size,d4$body_centroid_size,iter=26)
+summary(PLS)
+plot(PLS)
+#ggplot(d4, aes(x=jaw_centroid_size, y=body_centroid_size, color=subfamily))
 ```
-Links Used:
-chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2Fpls%2Fvignettes%2Fpls-manual.pdf&clen=468096&chunk=truechrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/viewer.html?pdfurl=https%3A%2F%2Fcran.r-project.org%2Fweb%2Fpackages%2Fpls%2Fvignettes%2Fpls-manual.pdf&clen=468096&chunk=true
-https://www.statology.org/partial-least-squares-in-r/
-http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/152-principal-component-and-partial-least-squares-regression-essentials/
 ```{r echo=FALSE, out.width="70%"}
-knitr::include_graphics("images/axis_of_covariaton.png")
+knitr::include_graphics("images/axis_of_covariation.png")
 ```
+
+## Summary/Discussion
+
+[Narrative section that overviews how successful were you at replicating the analyses and visualizations in the study. What problems did you encounter? Why might you have encountered those problems? What details were lacking from the original study's methods that might have hampered your ability to replicate the authors' results?]
+
+## References
+Martinez,Christopher M., Sparks,John S. 2017. Malagasy cichlids differentially limit impacts of body shape evolution on oral jaw functional morphology. Evolution. Volume 71, Issue 9 p. 2219-2229. https://onlinelibrary.wiley.com/doi/10.1111/evo.13298
+
+Dryad Data Download: https://datadryad.org/stash/dataset/doi:10.5061/dryad.k3b10
