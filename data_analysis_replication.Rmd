@@ -1,14 +1,19 @@
 ---
-title: "data-analysis-replication"
+title: "Data Analysis Replication Assignment"
 author: "Jyhreh Johnson"
 date: "3/8/2022"
 output: 
   html_document: 
     highlight: zenburn
     theme: readable
+    code_folding: show
+    toc: TRUE
+    toc_float: TRUE
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
+knitr::opts_chunk$set(
+  eval = TRUE, # run code in code chunks
+  echo = TRUE, # render output of code chunks
 	warning = TRUE,
 	message = TRUE,
 	comment = "##",
@@ -19,17 +24,13 @@ knitr::opts_chunk$set(echo = TRUE,
 	fig.align = "center"
 ) #tells {knitr} where to output figures/where to find images of figures
 ```
-**Introduction**
+## Introduction
+
 Martinez 2017 sought out to...
 
-**Methods**
+[Include a brief summary of the paper you are reanalyzing data from (e.g., the overall objective of the paper, the types of data collected and how sampling was done, what the main results were) and lay out what you intend to replicate.]
 
-**Results**
-
-**Discussion**
-
-Preliminaries | Load in necessary packages
-```{r}
+```{r Preliminaries, message=FALSE}
 library(tidyverse)
 library(ggplot2)
 library(ggfortify)
@@ -40,59 +41,113 @@ library(lars)
 library(pls)
 ```
 
-1. Load in Data
-```{r}
+## Visualization of Data
+
+[Include a view of the first few lines of the dataset plus any exploratory data analysis - e.g., overview of descriptive statistics included in the paper, plots, etc.]
+```{r d1 Data, echo=TRUE, message=FALSE, warning=FALSE, collapse=FALSE}
 #Figure data
 bs_f <- "https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/body%20shape%20coordinates.csv"
 d1 <- read.csv(bs_f, header = TRUE, stringsAsFactors = FALSE)
-head(d1)
+```
+```{r d1 Output, collapse=FALSE}
+head(d1,3)
+```
 
+```{r d2 Data, echo=TRUE, message=FALSE, warning=FALSE, collapse=FALSE}
 #Figure data
 fbs_f <- "https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/fourbar%20shape%20coordinates.csv"
 d2 <- read.csv(fbs_f, header = TRUE, stringsAsFactors = FALSE)
-head(d2)
+```
+```{r d2 Output, collapse=FALSE}
+head(d2,3)
+```
 
+```{r d3 Data, echo=TRUE, message=FALSE, warning=FALSE, collapse=FALSE}
 #Figure data
 mkt_f <- "https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/hypothetical%204bars%2C%20MKT.csv"
 d3 <- read.csv(mkt_f, header = TRUE, stringsAsFactors = FALSE)
-head(d3)
+```
+```{r d3 Output, collapse=FALSE}
+head(d3,3)
+```
 
+```{r d4 Data, echo=TRUE, message=FALSE, warning=FALSE, collapse=FALSE}
 #Figure data
 species_f <-"https://raw.githubusercontent.com/jyhrehjohnson/data-analysis-replication/main/data/species%20info.csv"
 d4 <- read.csv(species_f, header = TRUE, stringsAsFactors = FALSE)
-head(d4)
+```
+```{r d4 Output, collapse=FALSE}
+head(d4,3)
 ```
 
+## Statistical Replications/Reanalysis
 
-2. Figure 4 Reduplication | PCA of Body Phylomorphospace
+[Be sure to **thoroughly** explain what replications you are doing and comment your code so that it is easy for a reader to understand. Include in this section relevant tables/figures/values from the original paper for comparison to what you accomplished with your replication. Note that I want you to do the bulk of any *exposition* using text and markdown syntax outside of code blocks. That is, your document should not just be one big code block with ***R*** style comments but rather a nicely formatted report with code separated from exposition, interpretation, and discussion.]
+
+## Summary/Discussion
+
+[Narrative section that overviews how successful were you at replicating the analyses and visualizations in the study. What problems did you encounter? Why might you have encountered those problems? What details were lacking from the original study's methods that might have hampered your ability to replicate the authors' results?]
+
+## References
+Christopher M. Martinez, John S. Sparks. 2017. Malagasy cichlids differentially limit impacts of body shape evolution on oral jaw functional morphology. Evolution. Volume 71, Issue 9 p. 2219-2229. https://onlinelibrary.wiley.com/doi/10.1111/evo.13298
+
+Dryad Data Download: https://datadryad.org/stash/dataset/doi:10.5061/dryad.k3b10
+
+## 2. Figure 4 Reduplication | PCA of Body Phylomorphospace
+
+Data Preparation
 ```{r}
-#Calculate the Principal Components
+#Prep the data 
+bs_data <- d1
 d1_mod <- str_split_fixed(d1$species, "_", 2) #split the original species column into two (Genus name & Species name)
 d1_mod <- as.data.frame(d1_mod, row.names = NULL, optional = FALSE) #make the modified data set a data frame
-bs_data <- d1 %>% mutate(genus = d1_mod$V1) #add the column genus 
-bs_data <- bs_data[2:118]
-bs_pca <- prcomp(bs_data, scale = TRUE) 
-autoplot(bs_pca, data = bs_data, colour = 'genus') #plot the pca coloring the data by genus 
+bs_data_mod <- d1 %>% mutate(genus = d1_mod$V1) #add the column genus 
+bs_data_mod <- bs_data_mod %>% relocate(genus, .after = species) #move the new genus column after the species column
+```
 
-#bs_data_reverse <- -1*bs_data_reverse
+PCA Analysis
+```{r}
+#Calculate the Principal Components
+bs_data_scaled <- scale(bs_data[, -1], 
+                     center = TRUE, 
+                     scale = TRUE)
+head(bs_data_scaled,3)
+
+e = eigen(cov(bs_data[, -1]))
+head(e,3)
+
+e.scaled = eigen(cov(bs_data_scaled))
+head(e.scaled,3)
+
+e.scaled$values #Variances
+e.scaled$values/6 #proportion of variances
+cumsum(e.scaled$values/6) #Cumulative proportion
+
+bs_data_pc  = as.matrix(bs_data_scaled) %*% e.scaled$vectors 
+head(bs_data_pc,3)
+
+require(stats)
+bs_pca <- prcomp(bs_data[, -1],
+             center = TRUE,
+             scale. = TRUE)
+head(bs_pca$x,3)
+
+summary(bs_pca)
+
+autoplot(bs_pca, data  = bs_data_mod, colour = 'genus') #plot the pca coloring the data by genus 
 ```
 ```{r echo=FALSE, out.width="70%"}
 knitr::include_graphics("images/pc_of_bodyphylomorphospace.png")
 ```
-Helpful Links: 
-https://cran.r-project.org/web/packages/ggfortify/vignettes/plot_pca.html
-https://www.statology.org/principal-components-analysis-in-r/
-http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/
 
-3. Figure 5 Reduplication | PCA of Oral Jaw Phylomorphospace
+## 3. Figure 5 Reduplication | PCA of Oral Jaw Phylomorphospace
 ```{r}
 ```
 ```{r echo=FALSE, out.width="70%"}
 #knitr::include_graphics("images/pc_of_oraljaw.png")
 ```
 
-
-4. Figure 6 Reduplication | Comparison MKT Density Plot
+## 4. Figure 6 Reduplication | Comparison MKT Density Plot
 ```{r}
 #Actually works! I really did that OMG. Looks somewhat like the original figure, I can't figure out how to fix the dip in the graph however.
 mkt_plot <- ggplot(d4, aes(x = MKT)) +
@@ -106,10 +161,9 @@ mkt_plot
 knitr::include_graphics("images/comparison_of_MKT.png")
 ```
 
-
-5. Figure 7 Reduplication | Axis of Covariation
+## 5. Figure 7 Reduplication | Axis of Covariation
 ```{r}
-head(d4)
+#head(d4)
 #two-block partial least square
 
 #set.seed(1)
